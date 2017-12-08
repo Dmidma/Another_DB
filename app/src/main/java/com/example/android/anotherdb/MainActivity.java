@@ -11,6 +11,9 @@ import android.support.v4.content.ContentResolverCompat;
 import android.support.v4.content.Loader;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.text.Editable;
+import android.text.TextWatcher;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
@@ -21,6 +24,7 @@ import android.widget.Toast;
 import com.example.android.anotherdb.provider.OtherContract;
 
 import java.util.ArrayList;
+import java.util.Locale;
 
 public class MainActivity extends AppCompatActivity implements
         View.OnClickListener {
@@ -50,6 +54,24 @@ public class MainActivity extends AppCompatActivity implements
 
         mEtInt = (EditText) findViewById(R.id.et_int);
         mEtSearch = (EditText) findViewById(R.id.et_search_string);
+        mEtSearch.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {
+
+            }
+
+            @Override
+            public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {
+
+            }
+
+            @Override
+            public void afterTextChanged(Editable editable) {
+                String text = mEtSearch.getText().toString().toLowerCase(Locale.getDefault());
+                new FetchRows().execute(text);
+
+            }
+        });
         mEtString = (EditText) findViewById(R.id.et_string);
 
         mBtnAdd = (Button) findViewById(R.id.btn_add_row);
@@ -101,15 +123,28 @@ public class MainActivity extends AppCompatActivity implements
             Toast.makeText(mContext, uri.toString(), Toast.LENGTH_LONG).show();
     }
 
-    public class FetchRows extends AsyncTask<Void, Void, Cursor> {
+    public class FetchRows extends AsyncTask<String, Void, Cursor> {
 
 
         @Override
-        protected Cursor doInBackground(Void... voids) {
+        protected Cursor doInBackground(String... strings) {
 
             ContentResolver resolver = getContentResolver();
 
-            Cursor cursor = resolver.query(OtherContract.Table1Entry.CONTENT_URI, null, null, null, null);
+            Cursor cursor;
+
+            int stringsLength = strings.length;
+
+            if (stringsLength > 0 && !strings[0].isEmpty()) {
+                Log.e("Heeeeeeeere", strings[0]);
+                String searchString = "%" + strings[0] + "%";
+                String selection = OtherContract.Table1Entry.COLUMN_TEXT + " LIKE ?";
+                cursor = resolver.query(OtherContract.Table1Entry.CONTENT_URI, null, selection, new String[] {searchString}, null);
+            } else {
+                cursor = resolver.query(OtherContract.Table1Entry.CONTENT_URI, null, null, null, null);
+            }
+
+
 
             return cursor;
         }
@@ -124,21 +159,35 @@ public class MainActivity extends AppCompatActivity implements
 
             if (cursor != null) {
 
+
                 // point to the first
                 cursor.moveToFirst();
 
-                do {
-                    int i = cursor.getInt(cursor.getColumnIndex(OtherContract.Table1Entry.COLUMN_NUMBER));
-                    int id = cursor.getInt(cursor.getColumnIndex(OtherContract.Table1Entry._ID));
-                    String text = cursor.getString(cursor.getColumnIndex(OtherContract.Table1Entry.COLUMN_TEXT));
+                if (cursor.getCount() >= 1) {
+                    try {
 
-                    mData.add(new String [] {id + "", text, i + ""});
-                } while (cursor.moveToNext());
+
+
+                        do {
+                            int i = cursor.getInt(cursor.getColumnIndex(OtherContract.Table1Entry.COLUMN_NUMBER));
+                            int id = cursor.getInt(cursor.getColumnIndex(OtherContract.Table1Entry._ID));
+                            String text = cursor.getString(cursor.getColumnIndex(OtherContract.Table1Entry.COLUMN_TEXT));
+
+                            mData.add(new String[]{id + "", text, i + ""});
+                        } while (cursor.moveToNext());
+
+                        mAdapter.setData(mData);
+                    } catch (Exception e) {
+                        e.printStackTrace();
+
+                    } finally {
+                        cursor.close();
+                    }
+                }
 
 
             }
 
-            mAdapter.setData(mData);
         }
     }
 
