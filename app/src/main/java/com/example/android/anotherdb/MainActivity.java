@@ -1,10 +1,13 @@
 package com.example.android.anotherdb;
 
+import android.content.ContentResolver;
 import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
 import android.net.Uri;
+import android.os.AsyncTask;
 import android.support.v4.app.LoaderManager;
+import android.support.v4.content.ContentResolverCompat;
 import android.support.v4.content.Loader;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -20,8 +23,7 @@ import com.example.android.anotherdb.provider.OtherContract;
 import java.util.ArrayList;
 
 public class MainActivity extends AppCompatActivity implements
-        View.OnClickListener,
-        LoaderManager.LoaderCallbacks<Cursor> {
+        View.OnClickListener {
 
     private Context mContext;
 
@@ -58,10 +60,13 @@ public class MainActivity extends AppCompatActivity implements
 
         mLvRows = (ListView) findViewById(R.id.lv_rows);
         mData = new ArrayList<String[]>();
-        mData.add(new String[] {"1", "Dmidma", "69"});
+        mData.add(new String[] {"1", "No Data", "Yet"});
         mAdapter = new RowAdapter(mContext, mData);
         mLvRows.setAdapter(mAdapter);
 
+
+        // fetch Data
+        new FetchRows().execute();
     }
 
     @Override
@@ -96,18 +101,46 @@ public class MainActivity extends AppCompatActivity implements
             Toast.makeText(mContext, uri.toString(), Toast.LENGTH_LONG).show();
     }
 
-    @Override
-    public Loader<Cursor> onCreateLoader(int id, Bundle args) {
-        return null;
+    public class FetchRows extends AsyncTask<Void, Void, Cursor> {
+
+
+        @Override
+        protected Cursor doInBackground(Void... voids) {
+
+            ContentResolver resolver = getContentResolver();
+
+            Cursor cursor = resolver.query(OtherContract.Table1Entry.CONTENT_URI, null, null, null, null);
+
+            return cursor;
+        }
+
+        @Override
+        protected void onPostExecute(Cursor cursor) {
+            super.onPostExecute(cursor);
+
+
+            mData = new ArrayList<String[]>();
+
+
+            if (cursor != null) {
+
+                // point to the first
+                cursor.moveToFirst();
+
+                do {
+                    int i = cursor.getInt(cursor.getColumnIndex(OtherContract.Table1Entry.COLUMN_NUMBER));
+                    int id = cursor.getInt(cursor.getColumnIndex(OtherContract.Table1Entry._ID));
+                    String text = cursor.getString(cursor.getColumnIndex(OtherContract.Table1Entry.COLUMN_TEXT));
+
+                    mData.add(new String [] {id + "", text, i + ""});
+                } while (cursor.moveToNext());
+
+
+            }
+
+            mAdapter.setData(mData);
+        }
     }
 
-    @Override
-    public void onLoadFinished(Loader<Cursor> loader, Cursor data) {
 
-    }
-
-    @Override
-    public void onLoaderReset(Loader<Cursor> loader) {
-
-    }
 }
