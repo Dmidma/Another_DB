@@ -16,6 +16,7 @@ public class OtherContract {
     public static Uri BASE_CONTENT_URI = Uri.parse("content://" + AUTHORITY);
 
 
+
     // define paths for tables to be able to: BASE_CONTENT_URI/PATH_TO_TABLE
     public static final String PATH_TO_TABLE_1 = "table_1";
 
