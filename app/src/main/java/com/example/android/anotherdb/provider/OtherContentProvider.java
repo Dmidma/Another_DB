@@ -29,7 +29,7 @@ public class OtherContentProvider extends ContentProvider {
     // Codes to match with URIs
     public static final int CODE_TABLE = 100;
     public static final int CODE_TABLE_WITH_INT = 101;
-
+    public static final int CODE_TABLE_WITH_STRING = 102;
 
     // the uri matcher
     private static final UriMatcher sUriMatcher = buildUriMatcher();
@@ -41,6 +41,7 @@ public class OtherContentProvider extends ContentProvider {
 
         uriMatcher.addURI(OtherContract.AUTHORITY, OtherContract.PATH_TO_TABLE_1, CODE_TABLE);
         uriMatcher.addURI(OtherContract.AUTHORITY, OtherContract.PATH_TO_TABLE_1 + "/#", CODE_TABLE_WITH_INT);
+        uriMatcher.addURI(OtherContract.AUTHORITY, OtherContract.PATH_TO_TABLE_1 + "/*", CODE_TABLE_WITH_STRING);
 
         return uriMatcher;
     }
